@@ -1,0 +1,115 @@
+<?php
+session_start();
+
+// Database Configuration
+$servername = "localhost";
+$username = "your_username";
+$password = "your_password";
+$dbname = "investment_management_system";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Logout logic
+if(isset($_POST['logout'])) {
+    // Unset all session variables
+    $_SESSION = array();
+    // Destroy the session
+    session_destroy();
+}
+
+// Login logic
+if(isset($_POST['login'])) {
+    $user = $_POST['username'];
+    $pass = $_POST['password'];
+
+    $sql = "SELECT * FROM users WHERE username='$user'";
+    $result = $conn->query($sql);
+
+    if ($result->num_rows == 1) {
+        $row = $result->fetch_assoc();
+        if ($row['password'] == $pass) {
+            // Redirect to home page or any other page after successful login
+            $_SESSION['username'] = $user;
+            header("location: index.php");
+            exit();
+        } else {
+            $error = "Password is not correct";
+        }
+    } else {
+        $error = "Username is not correct";
+    }
+
+    if (isset($error)) {
+        echo '<div style="color:red;">'.$error.'</div>';
+    }
+}
+
+// Create account logic
+if(isset($_POST['create_account'])) {
+    $new_user = $_POST['new_username'];
+    $new_pass = $_POST['new_password'];
+
+    $sql = "INSERT INTO users (username, password) VALUES ('$new_user', '$new_pass')";
+
+    if ($conn->query($sql) === TRUE) {
+        echo '<div style="color:green;">Account created successfully!</div>';
+    } else {
+        echo '<div style="color:red;">Error creating account: ' . $conn->error . '</div>';
+    }
+}
+
+$conn->close();
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Investment Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Login</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index.php">Back to Home</a></li>
+        </ul>
+    </nav>
+    <main>
+        <h2>Login</h2>
+        <form method="post">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required><br><br>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required><br><br>
+            <input type="submit" name="login" value="Login">
+        </form>
+
+        <p>Don't have an account? <a href="#create-account">Create one here</a></p>
+
+        <div id="create-account" style="display: none;">
+            <h2>Create Account</h2>
+            <form method="post">
+                <label for="new_username">New Username:</label>
+                <input type="text" id="new_username" name="new_username" required><br><br>
+                <label for="new_password">New Password:</label>
+                <input type="password" id="new_password" name="new_password" required><br><br>
+                <input type="submit" name="create_account" value="Create Account">
+            </form>
+            <p>Already have an account? <a href="logout.php">Login here</a></p>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2024 Investment Management System</p>
+    </footer>
+</body>
+</html>
